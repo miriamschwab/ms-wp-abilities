@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.13.0 — 2026-10-18
+
+- Added: `create-post` takes an optional `author`, a user ID or username, so a post can be credited to the right person when it is created. Until now every post went to the account the MCP client connects as, and correcting it afterwards meant an update that also changed each post's modified date. Leave it out and nothing changes. Naming someone else follows the same rule as the WordPress REST API, permission to edit others' posts of that type, and the named user must be able to write that type, so a post cannot be credited to a subscriber. An unknown user is an error, never a silent fallback to the connected account. The audit trail records which author was requested.
+- Fixed: readme.txt said post updates were gated by a minimum confirmation delay. That delay was removed in 1.7.0; confirmation is a conversational step the agent follows, as the readme's Safety section already said.
+- Fixed: readme.txt's FAQ said the abilities were specific to one site and designed for single-site use. They work on any site; the `miriamschwab/` prefix is only the namespace the plugin has always used.
+- Changed: the test suite runs on PHPUnit 11.5 (was 9.6), with data providers declared as attributes. Development only; nothing in the installed plugin changes.
+
 ## 1.12.0 — 2026-09-01
 
 - Added: the MCP server now tells connecting agents what the site can do. The adapter's default server exposes three meta-tools, so an agent had to spend a `discover-abilities` call — often a `get-ability-info` call as well — before it could act. The site's MCP-exposed abilities, with their descriptions, are now written into the server's own `instructions` and delivered when the connection opens. Nothing to configure and no new endpoint: the list is generated from the ability registry on each connection, so abilities registered by any plugin appear automatically. This extends Decision 15's reasoning — guidance belongs where it travels with the plugin — from a single ability's description to the server as a whole, which matters because several descriptions here carry usage protocol rather than only identification.

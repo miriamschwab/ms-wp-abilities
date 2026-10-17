@@ -4,7 +4,7 @@ Tags: ai, mcp, abilities, rest-api, agents
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.12.0
+Stable tag: 1.13.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,8 +23,8 @@ Posts and pages:
 * `get-posts` / `get-pages` — retrieve with filtering by status, post type, category, tag, or search
 * `get-post-meta` — read post meta, all fields or specific keys
 * `get-post-types` — list registered public post types
-* `create-post` — create from markdown (converted to Gutenberg blocks server-side) or raw HTML, with optional meta (e.g. Yoast fields)
-* `preview-post-update` / `apply-post-update` — two-step staged update (title, content, excerpt, status, categories, tags, meta) gated by a minimum confirmation delay
+* `create-post` — create from markdown (converted to Gutenberg blocks server-side) or raw HTML, with optional meta (e.g. Yoast fields) and an optional author (defaults to the connected user)
+* `preview-post-update` / `apply-post-update` — two-step staged update (title, content, excerpt, status, categories, tags, meta)
 * `patch-post-content` — surgical find-and-replace on post content, no staging required
 * `trash-post` — move a post to trash
 
@@ -94,17 +94,23 @@ WordPress 6.9 or higher. This plugin uses the `wp_register_ability()` API introd
 
 = What capabilities do the abilities require? =
 
-Each ability checks the appropriate WordPress capability: `edit_posts` for post reads and writes, `delete_posts` for trashing, `upload_files` for media, `manage_categories` for taxonomy, `list_users` for user listing, `manage_options` for site settings, `activate_plugins` / `install_plugins` / `update_plugins` for plugin management, and `switch_themes` / `update_themes` for theme management.
+Each ability checks the appropriate WordPress capability: `edit_posts` for post reads and writes (plus the post type's `edit_others_posts` when create-post credits someone else), `delete_posts` for trashing, `upload_files` for media, `manage_categories` for taxonomy, `list_users` for user listing, `manage_options` for site settings, `activate_plugins` / `install_plugins` / `update_plugins` for plugin management, and `switch_themes` / `update_themes` for theme management.
 
 = Does the plugin store any data? =
 
 Yes, three things. When a post update is staged via preview-post-update, the pending update is stored temporarily in user meta under `_mswpa_pending_update_{post_id}`; it expires after 10 minutes and is consumed on apply. The WP Abilities admin page (Tools > WP Abilities) also stores a snapshot of the currently-registered ability list in a site option, `mswpa_abilities_snapshot`, so it can flag what's new or no longer registered since your last visit to that page. On WordPress 7.1 and later, that page also keeps an audit trail of the last 100 invocations of an ability that changes content or configuration, in a site option, `mswpa_write_log`. The trail records the ability name, the user, the time, and the input field names; values are recorded only for identifying fields such as a post ID or a REST route, so post content, REST bodies and meta values are never stored. All three are removed on uninstall.
 
-= What is the site-specific category? =
+= Why are the abilities named `miriamschwab/...`? =
 
-Abilities are registered under the `miriamschwab` category, which is specific to the miriamschwab.me site. These abilities are designed for single-site use and include site-specific post type awareness.
+That is the plugin's ability namespace and category ID, kept from its first version so existing setups keep working. It does not tie the plugin to any one site: the abilities work on any WordPress site, with any post type it registers.
 
 == Changelog ==
+
+= 1.13.0 - 2026-10-18 =
+* Added: create-post takes an optional `author`, a user ID or username, so a post can be credited to the right person when it is created. Until now every post went to the account the MCP client connects as, and correcting it afterwards meant an update that also changed each post's modified date. Leave it out and nothing changes. Naming someone else follows the same rule as the WordPress REST API, permission to edit others' posts of that type, and the named user must be able to write that type, so a post cannot be credited to a subscriber. An unknown user is an error, never a silent fallback to the connected account. The audit trail records which author was requested.
+* Fixed: this readme said post updates were gated by a minimum confirmation delay. That delay was removed in 1.7.0; confirmation is a conversational step the agent follows, as the Safety section already said.
+* Fixed: the FAQ said the abilities were specific to one site and designed for single-site use. They work on any site; the `miriamschwab/` prefix is only the namespace the plugin has always used.
+* Changed: the test suite runs on PHPUnit 11.5 (was 9.6), with data providers declared as attributes. Development only; nothing in the installed plugin changes.
 
 = 1.12.0 - 2026-09-01 =
 * Added: the MCP server now tells connecting agents what the site can do. The adapter's default server exposes three meta-tools, so an agent had to spend a discover-abilities call — often a get-ability-info call as well — before it could act. The site's MCP-exposed abilities, with their descriptions, are now written into the server's own instructions and delivered when the connection opens. Nothing to configure and no new endpoint: the list is generated from the ability registry on each connection, so abilities added by any plugin appear automatically.

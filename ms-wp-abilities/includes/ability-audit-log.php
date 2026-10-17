@@ -72,6 +72,7 @@ function mswpa_audit_loggable_keys(): array {
 		'name',        // create-term.
 		'status',      // create-post.
 		'post_type',   // create-post.
+		'author',      // create-post — a user ID or login, so who a post was credited to is on record.
 		'activate',    // install-plugin.
 	);
 }

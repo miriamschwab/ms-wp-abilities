@@ -5,6 +5,7 @@
  * @package MS_WP_Abilities
  */
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,11 +30,10 @@ class AbilityFieldsTest extends TestCase {
 	/**
 	 * Anything that is not an array normalizes to "no selection".
 	 *
-	 * @dataProvider nonArrayInputs
-	 *
 	 * @param mixed $raw Raw fields input.
 	 * @return void
 	 */
+	#[DataProvider( 'nonArrayInputs' )]
 	public function testNonArrayInputNormalizesToEmpty( $raw ): void {
 		$this->assertSame( array(), mswpa_requested_fields( $raw ) );
 	}
@@ -43,7 +43,7 @@ class AbilityFieldsTest extends TestCase {
 	 *
 	 * @return array<string, array{mixed}>
 	 */
-	public function nonArrayInputs(): array {
+	public static function nonArrayInputs(): array {
 		return array(
 			'null'   => array( null ),
 			'string' => array( 'post_title' ),

@@ -14,7 +14,7 @@ WordPress's Abilities API gives plugins a standard way to register discrete, per
 - `get-posts` / `get-pages` — retrieve with filtering by status, post type, category, tag, or search
 - `get-post-meta` — read post meta, all fields or specific keys
 - `get-post-types` — list registered public post types
-- `create-post` — create from markdown (converted to Gutenberg blocks server-side) or raw HTML, with optional meta (e.g. Yoast fields)
+- `create-post` — create from markdown (converted to Gutenberg blocks server-side) or raw HTML, with optional meta (e.g. Yoast fields) and an optional author (defaults to the connected user)
 - `preview-post-update` / `apply-post-update` — two-step staged update (title, content, excerpt, status, categories, tags, meta)
 - `patch-post-content` — surgical find-and-replace on post content, no staging required
 - `trash-post` — move a post to trash

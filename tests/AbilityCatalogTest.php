@@ -5,6 +5,7 @@
  * @package MS_WP_Abilities
  */
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -81,11 +82,10 @@ class AbilityCatalogTest extends TestCase {
 	 * A loose check would expose abilities on any truthy value — `1`, `"yes"` —
 	 * which is the over-exposure direction and the one that matters.
 	 *
-	 * @dataProvider truthyNonTrueValues
-	 *
 	 * @param mixed $value Truthy value that is not boolean true.
 	 * @return void
 	 */
+	#[DataProvider( 'truthyNonTrueValues' )]
 	public function testMetaPublicFallbackIsStrict( $value ): void {
 		$this->assertFalse( mswpa_ability_is_mcp_public( array( 'public' => $value ) ) );
 	}
@@ -154,11 +154,10 @@ class AbilityCatalogTest extends TestCase {
 	 * They are reached through different MCP methods, so listing them under an
 	 * instruction to call execute-ability would send an agent down a dead end.
 	 *
-	 * @dataProvider nonToolTypes
-	 *
 	 * @param string $type Declared mcp.type.
 	 * @return void
 	 */
+	#[DataProvider( 'nonToolTypes' )]
 	public function testResourcesAndPromptsAreNotTools( string $type ): void {
 		$meta = array( 'mcp' => array( 'type' => $type ) );
 		$this->assertFalse( mswpa_ability_is_mcp_tool( $meta ) );
@@ -359,14 +358,13 @@ class AbilityCatalogTest extends TestCase {
 	/**
 	 * Every tier that returns a catalog respects the budget.
 	 *
-	 * @dataProvider budgetShapes
-	 *
 	 * @param int $count    Row count.
 	 * @param int $name_len Name length.
 	 * @param int $label    Label length.
 	 * @param int $desc     Description length.
 	 * @return void
 	 */
+	#[DataProvider( 'budgetShapes' )]
 	public function testCatalogNeverExceedsBudget( int $count, int $name_len, int $label, int $desc ): void {
 		$catalog = mswpa_build_ability_catalog( $this->rows( $count, $name_len, $label, $desc ) );
 		$this->assertLessThanOrEqual( MSWPA_CATALOG_MAX_CHARS, strlen( $catalog ) );

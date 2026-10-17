@@ -3,7 +3,7 @@
  * Plugin Name:       MS WordPress Abilities
  * Plugin URI:        https://miriamschwab.me/plugins/ms-wp-abilities
  * Description:       Registers WordPress core and custom abilities for MCP Adapter access, enabling AI agents to interact with this WordPress site.
- * Version:           1.12.0
+ * Version:           1.13.0
  * Author:            Miriam Schwab
  * Author URI:        https://miriamschwab.me
  * License:           GPL-2.0-or-later
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'MSWPA_VERSION', '1.12.0' );
+define( 'MSWPA_VERSION', '1.13.0' );
 define( 'MSWPA_PREVIEW_EXPIRY_SECS', 600 );
 define( 'MSWPA_ABILITIES_SNAPSHOT_OPTION', 'mswpa_abilities_snapshot' );
 define( 'MSWPA_AUDIT_LOG_OPTION', 'mswpa_write_log' );
@@ -34,6 +34,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/ability-policy.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/ability-fields.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/ability-audit-log.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/ability-catalog.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/post-author.php';
 
 add_action( 'init', 'mswpa_load_textdomain' );
 /**
@@ -444,7 +445,7 @@ function mswpa_register_abilities() {
 		'miriamschwab/create-post',
 		array(
 			'label'               => __( 'Create Post', 'ms-wp-abilities' ),
-			'description'         => __( 'Create a new WordPress post. Defaults to draft status. Pass markdown to auto-convert to Gutenberg blocks. Supports meta for Yoast SEO fields and any other post meta.', 'ms-wp-abilities' ),
+			'description'         => __( 'Create a new WordPress post. Defaults to draft status. Pass markdown to auto-convert to Gutenberg blocks. Supports meta for Yoast SEO fields and any other post meta. Pass author to credit someone other than the connected user.', 'ms-wp-abilities' ),
 			'category'            => 'miriamschwab',
 			'input_schema'        => array(
 				'type'       => 'object',
@@ -487,6 +488,10 @@ function mswpa_register_abilities() {
 						'type'        => 'object',
 						'description' => 'Post meta key-value pairs set on creation. Yoast SEO fields: _yoast_wpseo_focuskw, _yoast_wpseo_title, _yoast_wpseo_metadesc.',
 					),
+					'author'     => array(
+						'type'        => array( 'integer', 'string' ),
+						'description' => 'User ID or username to credit as the post author. Defaults to the connected user. Naming someone else needs permission to edit others\' posts of this type, and that user must be able to write them.',
+					),
 				),
 			),
 			'output_schema'       => array( 'type' => 'object' ),
@@ -494,6 +499,27 @@ function mswpa_register_abilities() {
 			'execute_callback'    => function ( $input ) {
 				if ( empty( $input['title'] ) ) {
 					return new WP_Error( 'missing_title', __( 'A post title is required.', 'ms-wp-abilities' ) );
+				}
+				$post_type = isset( $input['post_type'] ) ? sanitize_key( $input['post_type'] ) : 'post';
+				$type_obj  = get_post_type_object( $post_type );
+				$author    = mswpa_resolve_post_author(
+					$input['author'] ?? null,
+					get_current_user_id(),
+					function ( $lookup ) {
+						$user = is_int( $lookup ) ? get_userdata( $lookup ) : get_user_by( 'login', $lookup );
+						return $user ? (int) $user->ID : 0;
+					},
+					function ( $user_id ) use ( $type_obj ) {
+						$edit_others = $type_obj ? $type_obj->cap->edit_others_posts : 'edit_others_posts';
+						$edit_posts  = $type_obj ? $type_obj->cap->edit_posts : 'edit_posts';
+						return current_user_can( $edit_others ) && user_can( $user_id, $edit_posts );
+					}
+				);
+				if ( 'invalid_author' === $author ) {
+					return new WP_Error( 'invalid_author', __( 'No user matches that author ID or username.', 'ms-wp-abilities' ) );
+				}
+				if ( 'cannot_assign_author' === $author ) {
+					return new WP_Error( 'cannot_assign_author', __( 'This post cannot be credited to that user. It needs permission to edit others\' posts of this type, and the author must be able to write them.', 'ms-wp-abilities' ) );
 				}
 				$allowed  = array( 'draft', 'publish', 'pending', 'private' );
 				$status   = isset( $input['status'] ) && in_array( $input['status'], $allowed, true ) ? $input['status'] : 'draft';
@@ -509,8 +535,8 @@ function mswpa_register_abilities() {
 					'post_content' => $post_content,
 					'post_excerpt' => isset( $input['excerpt'] ) ? sanitize_textarea_field( $input['excerpt'] ) : '',
 					'post_status'  => $status,
-					'post_type'    => isset( $input['post_type'] ) ? sanitize_key( $input['post_type'] ) : 'post',
-					'post_author'  => get_current_user_id(),
+					'post_type'    => $post_type,
+					'post_author'  => $author,
 				);
 				if ( ! empty( $input['meta'] ) && is_array( $input['meta'] ) ) {
 					$meta_input = array();

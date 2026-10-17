@@ -10,6 +10,7 @@
  * @package MS_WP_Abilities
  */
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -45,12 +46,11 @@ class AbilityAuditLogTest extends TestCase {
 	/**
 	 * Content-bearing fields contribute their key name and nothing else.
 	 *
-	 * @dataProvider sensitiveFields
-	 *
 	 * @param string $key   Input key that must never have its value stored.
 	 * @param mixed  $value A value for that key.
 	 * @return void
 	 */
+	#[DataProvider( 'sensitiveFields' )]
 	public function testContentValuesAreNeverRecorded( string $key, $value ): void {
 		$summary = mswpa_summarize_ability_input( array( $key => $value ) );
 
@@ -63,7 +63,7 @@ class AbilityAuditLogTest extends TestCase {
 	 *
 	 * @return array<string, array{string, mixed}>
 	 */
-	public function sensitiveFields(): array {
+	public static function sensitiveFields(): array {
 		return array(
 			'post content' => array( 'content', '<!-- wp:paragraph --><p>Secret</p><!-- /wp:paragraph -->' ),
 			'markdown'     => array( 'markdown', '# Draft of unannounced thing' ),

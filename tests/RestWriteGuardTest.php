@@ -10,6 +10,7 @@
  * @package MS_WP_Abilities
  */
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -56,11 +57,10 @@ class RestWriteGuardTest extends TestCase {
 	/**
 	 * Every spelling of `force` that sanitize_key() folds to "force" must be blocked.
 	 *
-	 * @dataProvider forceKeyVariants
-	 *
 	 * @param string $key Body key as the caller would send it.
 	 * @return void
 	 */
+	#[DataProvider( 'forceKeyVariants' )]
 	public function test_force_key_variants_are_blocked( string $key ): void {
 		$this->assertBlocked( '/wp/v2/posts/42', 'DELETE', array( $key => true ) );
 	}
@@ -70,7 +70,7 @@ class RestWriteGuardTest extends TestCase {
 	 *
 	 * @return array<string, array{0: string}>
 	 */
-	public function forceKeyVariants(): array {
+	public static function forceKeyVariants(): array {
 		return array(
 			'lowercase (the case that always worked)' => array( 'force' ),
 			'capitalized'                             => array( 'Force' ),
@@ -112,11 +112,10 @@ class RestWriteGuardTest extends TestCase {
 	/**
 	 * Keys that merely contain "force" must NOT be blocked — no over-blocking.
 	 *
-	 * @dataProvider nonForceKeys
-	 *
 	 * @param string $key Body key that does not normalize to "force".
 	 * @return void
 	 */
+	#[DataProvider( 'nonForceKeys' )]
 	public function test_keys_that_are_not_force_are_allowed( string $key ): void {
 		$this->assertAllowed( '/wp/v2/posts/42', 'POST', array( $key => true ) );
 	}
@@ -126,7 +125,7 @@ class RestWriteGuardTest extends TestCase {
 	 *
 	 * @return array<string, array{0: string}>
 	 */
-	public function nonForceKeys(): array {
+	public static function nonForceKeys(): array {
 		return array(
 			'forced'    => array( 'forced' ),
 			'enforce'   => array( 'enforce' ),
@@ -160,11 +159,10 @@ class RestWriteGuardTest extends TestCase {
 	 * WP_REST_Server::match_request_to_handler() matches with '@^' . $route . '$@i',
 	 * so /wp/v2/Users/5 reaches the same handler as /wp/v2/users/5.
 	 *
-	 * @dataProvider usersRoutes
-	 *
 	 * @param string $route Route spelling.
 	 * @return void
 	 */
+	#[DataProvider( 'usersRoutes' )]
 	public function test_users_writes_are_blocked( string $route ): void {
 		$this->assertBlocked( $route, 'POST' );
 		$this->assertBlocked( $route, 'DELETE' );
@@ -176,7 +174,7 @@ class RestWriteGuardTest extends TestCase {
 	 *
 	 * @return array<string, array{0: string}>
 	 */
-	public function usersRoutes(): array {
+	public static function usersRoutes(): array {
 		return array(
 			'lowercase'          => array( '/wp/v2/users' ),
 			'capitalized noun'   => array( '/wp/v2/Users' ),
@@ -294,11 +292,10 @@ class RestWriteGuardTest extends TestCase {
 	 * "force" on the endpoint. Asserting the equivalence directly means any
 	 * future divergence between the check and the dispatch fails here.
 	 *
-	 * @dataProvider bodiesForDispatchEquivalence
-	 *
 	 * @param array $body Raw body as supplied by the caller.
 	 * @return void
 	 */
+	#[DataProvider( 'bodiesForDispatchEquivalence' )]
 	public function test_guard_agrees_with_what_will_be_dispatched( array $body ): void {
 		$dispatched_keys = array_keys( mswpa_normalize_rest_body( $body ) );
 		$will_send_force = in_array( 'force', $dispatched_keys, true );
@@ -321,7 +318,7 @@ class RestWriteGuardTest extends TestCase {
 	 *
 	 * @return array<string, array{0: array}>
 	 */
-	public function bodiesForDispatchEquivalence(): array {
+	public static function bodiesForDispatchEquivalence(): array {
 		return array(
 			'empty'                => array( array() ),
 			'lowercase force'      => array( array( 'force' => true ) ),

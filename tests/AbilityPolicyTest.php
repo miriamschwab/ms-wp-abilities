@@ -12,6 +12,7 @@
  * @package MS_WP_Abilities
  */
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -269,11 +270,10 @@ class AbilityPolicyTest extends TestCase {
 	 * Whether the core abilities appear in REST is core's decision, not this
 	 * plugin's, and another plugin's abilities are not ours to reach into.
 	 *
-	 * @dataProvider foreignAbilityNames
-	 *
 	 * @param string $name Ability name outside this plugin's namespace.
 	 * @return void
 	 */
+	#[DataProvider( 'foreignAbilityNames' )]
 	public function testForeignAbilitiesAreUntouched( string $name ): void {
 		$args = array( 'meta' => array( 'public' => true ) );
 		$this->assertSame( $args, mswpa_force_no_rest_exposure( $args, $name ) );
@@ -284,7 +284,7 @@ class AbilityPolicyTest extends TestCase {
 	 *
 	 * @return array<string, string[]>
 	 */
-	public function foreignAbilityNames(): array {
+	public static function foreignAbilityNames(): array {
 		return array(
 			'core site info'    => array( 'core/get-site-info' ),
 			'core user info'    => array( 'core/get-user-info' ),

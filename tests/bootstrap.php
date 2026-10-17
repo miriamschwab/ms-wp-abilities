@@ -63,6 +63,7 @@ require_once __DIR__ . '/../ms-wp-abilities/includes/ability-policy.php';
 require_once __DIR__ . '/../ms-wp-abilities/includes/ability-fields.php';
 require_once __DIR__ . '/../ms-wp-abilities/includes/ability-audit-log.php';
 require_once __DIR__ . '/../ms-wp-abilities/includes/ability-catalog.php';
+require_once __DIR__ . '/../ms-wp-abilities/includes/post-author.php';
 
 /**
  * Compact JSON encoder for assertion messages (WordPress's wp_json_encode is not stubbed).
