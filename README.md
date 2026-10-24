@@ -61,6 +61,8 @@ This plugin grants real, broad control over the WordPress site to whatever MCP c
 - **Review the `rest-write` hard-block list** in the source (`mswpa_rest_write_blocked_reason()`) before relying on it as a safety net — it blocks a short list of especially destructive routes (user writes, force-deleting plugins, site settings writes, permanent deletes), not everything that could go wrong.
 - Post content updates use a two-step preview/confirm model (`preview-post-update` → `apply-post-update`); the REST bridge follows the same pattern for writes. Both rely on the calling agent stating the proposed change and waiting for the human's explicit approval — this is a conversational policy the agent is instructed to follow, not a mechanism enforced by the code itself.
 
+To report a vulnerability, see [SECURITY.md](SECURITY.md). Please do not open a public issue.
+
 ## Installation
 
 1. Install and activate [MCP Adapter](https://github.com/WordPress/mcp-adapter).
