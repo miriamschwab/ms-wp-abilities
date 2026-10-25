@@ -8,7 +8,7 @@ WordPress's Abilities API gives plugins a standard way to register discrete, per
 
 ## Abilities included
 
-29 abilities total: 26 custom, plus 3 WordPress core abilities (`get-site-info`, `get-user-info`, `get-environment-info`) explicitly opted into MCP visibility.
+31 abilities total: 28 custom, plus 3 WordPress core abilities (`get-site-info`, `get-user-info`, `get-environment-info`) explicitly opted into MCP visibility.
 
 **Posts and pages**
 - `get-posts` / `get-pages` — retrieve with filtering by status, post type, category, tag, or search
@@ -31,6 +31,7 @@ WordPress's Abilities API gives plugins a standard way to register discrete, per
 - `get-users` — list users with role filtering
 
 **Site**
+- `get-custom-css` / `update-custom-css`: read and replace the active theme's Additional CSS with `edit_css` permission. Read first, preserve existing rules, and confirm the change before updating. Pass the returned `stylesheet` and complete `css`; an empty string clears CSS, and a changed active theme is rejected.
 - `get-site-settings` — site configuration
 - `get-menus` — navigation menus and their items
 

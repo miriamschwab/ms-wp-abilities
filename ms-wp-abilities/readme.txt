@@ -16,7 +16,7 @@ MS WordPress Abilities registers a comprehensive set of WordPress abilities usin
 
 **Abilities included**
 
-26 custom abilities, plus 3 WordPress core abilities exposed for MCP access (`get-site-info`, `get-user-info`, `get-environment-info`).
+28 custom abilities, plus 3 WordPress core abilities exposed for MCP access (`get-site-info`, `get-user-info`, `get-environment-info`).
 
 Posts and pages:
 
@@ -44,6 +44,7 @@ Users:
 
 Site:
 
+* `get-custom-css` / `update-custom-css`: read and replace the active theme's Additional CSS with `edit_css` permission. Read first, preserve existing rules, and confirm the change before updating. Pass the returned `stylesheet` and complete `css`; an empty string clears CSS, and a changed active theme is rejected.
 * `get-site-settings` — site configuration
 * `get-menus` — navigation menus and their items
 

@@ -74,6 +74,7 @@ function mswpa_audit_loggable_keys(): array {
 		'post_type',   // create-post.
 		'author',      // create-post — a user ID or login, so who a post was credited to is on record.
 		'activate',    // install-plugin.
+		'stylesheet',  // update-custom-css.
 	);
 }
 
@@ -91,6 +92,7 @@ function mswpa_audit_content_keys(): array {
 		'title',   // create-post — a post title can be sensitive before publication.
 		'find',    // patch-post-content — the search string is page content.
 		'replace', // patch-post-content — as is the replacement.
+		'css',     // update-custom-css.
 	);
 }
 

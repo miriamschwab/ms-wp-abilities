@@ -1368,6 +1368,79 @@ function mswpa_register_abilities() {
 	// =========================================================================
 
 	wp_register_ability(
+		'miriamschwab/get-custom-css',
+		array(
+			'label'               => __( 'Get Custom CSS', 'ms-wp-abilities' ),
+			'description'         => __( 'Read the active theme stylesheet identifier and its Additional CSS. Use this before update-custom-css to preserve existing rules and identify the theme to update.', 'ms-wp-abilities' ),
+			'category'            => 'miriamschwab',
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'properties'           => new stdClass(),
+				'additionalProperties' => false,
+			),
+			'output_schema'       => array( 'type' => 'object' ),
+			'permission_callback' => fn() => current_user_can( 'edit_css' ),
+			'execute_callback'    => function () {
+				$stylesheet = get_stylesheet();
+				return array(
+					'stylesheet' => $stylesheet,
+					'css'        => wp_get_custom_css( $stylesheet ),
+				);
+			},
+			'meta'                => array( 'mcp' => array( 'public' => true ) ),
+		)
+	);
+
+	wp_register_ability(
+		'miriamschwab/update-custom-css',
+		array(
+			'label'               => __( 'Update Custom CSS', 'ms-wp-abilities' ),
+			'description'         => __( 'Replace the active theme Additional CSS. Read get-custom-css first, preserve existing rules, show the proposed change to the user and wait for explicit confirmation before calling. Pass its stylesheet identifier; a changed active theme is an error. An empty css string clears Additional CSS.', 'ms-wp-abilities' ),
+			'category'            => 'miriamschwab',
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'required'             => array( 'stylesheet', 'css' ),
+				'properties'           => array(
+					'stylesheet' => array(
+						'type'        => 'string',
+						'description' => __( 'Active theme stylesheet identifier returned by get-custom-css.', 'ms-wp-abilities' ),
+					),
+					'css'        => array(
+						'type'        => 'string',
+						'description' => __( 'Complete replacement CSS, without HTML or style tags. Empty string clears existing CSS.', 'ms-wp-abilities' ),
+					),
+				),
+				'additionalProperties' => false,
+			),
+			'output_schema'       => array( 'type' => 'object' ),
+			'permission_callback' => fn() => current_user_can( 'edit_css' ),
+			'execute_callback'    => function ( $input ) {
+				if ( ! isset( $input['stylesheet'], $input['css'] ) || ! is_string( $input['stylesheet'] ) || ! is_string( $input['css'] ) ) {
+					return new WP_Error( 'invalid_custom_css_input', __( 'A stylesheet identifier and a CSS string are required.', 'ms-wp-abilities' ) );
+				}
+				$stylesheet = get_stylesheet();
+				if ( $stylesheet !== $input['stylesheet'] ) {
+					return new WP_Error( 'stylesheet_mismatch', __( 'The active theme does not match the requested stylesheet. Read get-custom-css again before updating.', 'ms-wp-abilities' ) );
+				}
+				// Reject markup, including truncated closing tags that could escape a style element.
+				if ( preg_match( '#</?\w+|</?$#', $input['css'] ) ) {
+					return new WP_Error( 'illegal_markup', __( 'HTML is not allowed in Additional CSS.', 'ms-wp-abilities' ) );
+				}
+				$post = wp_update_custom_css_post( $input['css'], array( 'stylesheet' => $stylesheet ) );
+				if ( is_wp_error( $post ) ) {
+					return $post;
+				}
+				return array(
+					'ID'         => $post->ID,
+					'stylesheet' => $stylesheet,
+					'css'        => wp_get_custom_css( $stylesheet ),
+				);
+			},
+			'meta'                => array( 'mcp' => array( 'public' => true ) ),
+		)
+	);
+
+	wp_register_ability(
 		'miriamschwab/get-site-settings',
 		array(
 			'label'               => __( 'Get Site Settings', 'ms-wp-abilities' ),

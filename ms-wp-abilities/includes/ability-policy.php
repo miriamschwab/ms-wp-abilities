@@ -115,6 +115,14 @@ function mswpa_ability_policy(): array {
 		),
 
 		// Site.
+		'miriamschwab/get-custom-css'        => array(
+			'cap'   => 'edit_css',
+			'write' => false,
+		),
+		'miriamschwab/update-custom-css'     => array(
+			'cap'   => 'edit_css',
+			'write' => true,
+		),
 		'miriamschwab/get-users'             => array(
 			'cap'   => 'list_users',
 			'write' => false,

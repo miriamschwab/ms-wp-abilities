@@ -122,6 +122,7 @@ class AbilityPolicyTest extends TestCase {
 	 */
 	public function testKnownWriteAbilitiesAreFlagged(): void {
 		$writes = array(
+			'miriamschwab/update-custom-css',
 			'miriamschwab/create-post',
 			'miriamschwab/patch-post-content',
 			'miriamschwab/apply-post-update',
@@ -149,6 +150,7 @@ class AbilityPolicyTest extends TestCase {
 	 */
 	public function testReadAbilitiesAreNotFlaggedAsWrites(): void {
 		$reads = array(
+			'miriamschwab/get-custom-css',
 			'miriamschwab/get-posts',
 			'miriamschwab/get-pages',
 			'miriamschwab/preview-post-update',
