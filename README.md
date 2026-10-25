@@ -8,7 +8,7 @@ WordPress's Abilities API gives plugins a standard way to register discrete, per
 
 ## Abilities included
 
-29 abilities total: 26 custom, plus 3 WordPress core abilities (`get-site-info`, `get-user-info`, `get-environment-info`) explicitly opted into MCP visibility.
+29 abilities: 26 plugin abilities under `ms-wp-abilities/`, plus 3 WordPress core abilities (`get-site-info`, `get-user-info`, `get-environment-info`) explicitly opted into MCP visibility. Existing `miriamschwab/` names remain callable compatibility aliases with identical schemas and callbacks. New integrations and approval rules should use `ms-wp-abilities/`; the server's generated catalog recommends those names without repeating aliases. Neither namespace identifies the acting user: operations still run as the authenticated WordPress account.
 
 **Posts and pages**
 - `get-posts` / `get-pages` — retrieve with filtering by status, post type, category, tag, or search

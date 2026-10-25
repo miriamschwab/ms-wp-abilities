@@ -30,7 +30,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Used to scope the registration filters so they never touch `core/*` abilities
  * or another plugin's — their exposure and permissions are not ours to override.
  */
-const MSWPA_ABILITY_PREFIX = 'miriamschwab/';
+const MSWPA_ABILITY_PREFIX = 'ms-wp-abilities/';
+const MSWPA_LEGACY_ABILITY_PREFIX = 'miriamschwab/';
+
+/** Normalize compatibility names before applying the central policy. */
+function mswpa_canonical_ability_name( string $ability_name ): string {
+	if ( 0 === strpos( $ability_name, MSWPA_LEGACY_ABILITY_PREFIX ) ) {
+		return MSWPA_ABILITY_PREFIX . substr( $ability_name, strlen( MSWPA_LEGACY_ABILITY_PREFIX ) );
+	}
+	return $ability_name;
+}
 
 /**
  * The canonical policy table for this plugin's abilities.
@@ -44,7 +53,7 @@ const MSWPA_ABILITY_PREFIX = 'miriamschwab/';
  * abilities are excluded from the audit log — logging them would write to the
  * database on every agent query for no investigative value.
  *
- * miriamschwab/preview-post-update is classified as a read on purpose. It stages
+ * ms-wp-abilities/preview-post-update is classified as a read on purpose. It stages
  * a proposal into user meta and explicitly changes nothing about the post; the
  * paired apply-post-update is the mutation, and is what the log should record.
  *
@@ -53,117 +62,117 @@ const MSWPA_ABILITY_PREFIX = 'miriamschwab/';
 function mswpa_ability_policy(): array {
 	return array(
 		// Posts and pages.
-		'miriamschwab/get-posts'             => array(
+		'ms-wp-abilities/get-posts'             => array(
 			'cap'   => 'edit_posts',
 			'write' => false,
 		),
-		'miriamschwab/get-pages'             => array(
+		'ms-wp-abilities/get-pages'             => array(
 			'cap'   => 'edit_pages',
 			'write' => false,
 		),
-		'miriamschwab/create-post'           => array(
+		'ms-wp-abilities/create-post'           => array(
 			'cap'   => 'edit_posts',
 			'write' => true,
 		),
-		'miriamschwab/patch-post-content'    => array(
+		'ms-wp-abilities/patch-post-content'    => array(
 			'cap'   => 'edit_posts',
 			'write' => true,
 		),
-		'miriamschwab/preview-post-update'   => array(
+		'ms-wp-abilities/preview-post-update'   => array(
 			'cap'   => 'edit_posts',
 			'write' => false,
 		),
-		'miriamschwab/apply-post-update'     => array(
+		'ms-wp-abilities/apply-post-update'     => array(
 			'cap'   => 'edit_posts',
 			'write' => true,
 		),
-		'miriamschwab/trash-post'            => array(
+		'ms-wp-abilities/trash-post'            => array(
 			'cap'   => 'delete_posts',
 			'write' => true,
 		),
-		'miriamschwab/get-post-meta'         => array(
+		'ms-wp-abilities/get-post-meta'         => array(
 			'cap'   => 'edit_posts',
 			'write' => false,
 		),
-		'miriamschwab/get-post-types'        => array(
+		'ms-wp-abilities/get-post-types'        => array(
 			'cap'   => 'edit_posts',
 			'write' => false,
 		),
 
 		// Taxonomies.
-		'miriamschwab/get-categories'        => array(
+		'ms-wp-abilities/get-categories'        => array(
 			'cap'   => 'edit_posts',
 			'write' => false,
 		),
-		'miriamschwab/get-tags'              => array(
+		'ms-wp-abilities/get-tags'              => array(
 			'cap'   => 'edit_posts',
 			'write' => false,
 		),
-		'miriamschwab/create-term'           => array(
+		'ms-wp-abilities/create-term'           => array(
 			'cap'   => 'manage_categories',
 			'write' => true,
 		),
 
 		// Media.
-		'miriamschwab/get-media'             => array(
+		'ms-wp-abilities/get-media'             => array(
 			'cap'   => 'upload_files',
 			'write' => false,
 		),
-		'miriamschwab/update-media-meta'     => array(
+		'ms-wp-abilities/update-media-meta'     => array(
 			'cap'   => 'upload_files',
 			'write' => true,
 		),
 
 		// Site.
-		'miriamschwab/get-users'             => array(
+		'ms-wp-abilities/get-users'             => array(
 			'cap'   => 'list_users',
 			'write' => false,
 		),
-		'miriamschwab/get-site-settings'     => array(
+		'ms-wp-abilities/get-site-settings'     => array(
 			'cap'   => 'manage_options',
 			'write' => false,
 		),
-		'miriamschwab/get-menus'             => array(
+		'ms-wp-abilities/get-menus'             => array(
 			'cap'   => 'edit_theme_options',
 			'write' => false,
 		),
 
 		// Plugins and themes.
-		'miriamschwab/get-plugins'           => array(
+		'ms-wp-abilities/get-plugins'           => array(
 			'cap'   => 'activate_plugins',
 			'write' => false,
 		),
-		'miriamschwab/install-plugin'        => array(
+		'ms-wp-abilities/install-plugin'        => array(
 			'cap'   => 'install_plugins',
 			'write' => true,
 		),
-		'miriamschwab/activate-plugin'       => array(
+		'ms-wp-abilities/activate-plugin'       => array(
 			'cap'   => 'activate_plugins',
 			'write' => true,
 		),
-		'miriamschwab/update-plugin'         => array(
+		'ms-wp-abilities/update-plugin'         => array(
 			'cap'   => 'update_plugins',
 			'write' => true,
 		),
-		'miriamschwab/get-themes'            => array(
+		'ms-wp-abilities/get-themes'            => array(
 			'cap'   => 'switch_themes',
 			'write' => false,
 		),
-		'miriamschwab/update-theme'          => array(
+		'ms-wp-abilities/update-theme'          => array(
 			'cap'   => 'update_themes',
 			'write' => true,
 		),
-		'miriamschwab/get-available-updates' => array(
+		'ms-wp-abilities/get-available-updates' => array(
 			'cap'   => 'update_plugins',
 			'write' => false,
 		),
 
 		// REST bridge.
-		'miriamschwab/rest-get'              => array(
+		'ms-wp-abilities/rest-get'              => array(
 			'cap'   => 'edit_posts',
 			'write' => false,
 		),
-		'miriamschwab/rest-write'            => array(
+		'ms-wp-abilities/rest-write'            => array(
 			'cap'   => 'edit_posts',
 			'write' => true,
 		),
@@ -177,7 +186,7 @@ function mswpa_ability_policy(): array {
  * @return bool True when the ability is registered by this plugin.
  */
 function mswpa_is_own_ability( string $ability_name ): bool {
-	return 0 === strpos( $ability_name, MSWPA_ABILITY_PREFIX );
+	return 0 === strpos( mswpa_canonical_ability_name( $ability_name ), MSWPA_ABILITY_PREFIX );
 }
 
 /**
@@ -190,6 +199,7 @@ function mswpa_is_own_ability( string $ability_name ): bool {
  * @return bool True for a write ability declared in the policy table.
  */
 function mswpa_is_write_ability( string $ability_name ): bool {
+	$ability_name = mswpa_canonical_ability_name( $ability_name );
 	$policy = mswpa_ability_policy();
 	return isset( $policy[ $ability_name ] ) && true === $policy[ $ability_name ]['write'];
 }
@@ -201,6 +211,7 @@ function mswpa_is_write_ability( string $ability_name ): bool {
  * @return string|null Capability slug, or null when the ability is not in the table.
  */
 function mswpa_required_capability_for( string $ability_name ) {
+	$ability_name = mswpa_canonical_ability_name( $ability_name );
 	$policy = mswpa_ability_policy();
 	return $policy[ $ability_name ]['cap'] ?? null;
 }

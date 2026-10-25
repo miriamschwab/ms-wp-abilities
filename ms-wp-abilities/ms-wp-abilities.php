@@ -31,6 +31,7 @@ define( 'MSWPA_AUDIT_LOG_OPTION', 'mswpa_write_log' );
 // loading the plugin's hook registrations. See tests/.
 require_once plugin_dir_path( __FILE__ ) . 'includes/rest-write-guard.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/ability-policy.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/ability-namespace.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/ability-fields.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/ability-audit-log.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/ability-catalog.php';
@@ -125,7 +126,7 @@ add_filter( 'wp_ability_validate_input', 'mswpa_validate_ability_input', 10, 3 )
  * @return true|WP_Error Validation result.
  */
 function mswpa_validate_ability_input( $is_valid, $input, $ability_name ) {
-	if ( 'miriamschwab/rest-write' !== $ability_name || is_wp_error( $is_valid ) ) {
+	if ( 'ms-wp-abilities/rest-write' !== mswpa_canonical_ability_name( $ability_name ) || is_wp_error( $is_valid ) ) {
 		return $is_valid;
 	}
 	if ( ! is_array( $input ) || empty( $input['route'] ) || empty( $input['method'] ) ) {
@@ -222,11 +223,8 @@ add_action( 'wp_abilities_api_categories_init', 'mswpa_register_categories' );
 /**
  * Register the "miriamschwab" ability category.
  *
- * The category slug itself stays "miriamschwab" — it's referenced by every
- * wp_register_ability() call below and is just a registry identifier, not a
- * site-specific requirement. Only the human-readable label/description were
- * site-specific; they're now named after the plugin instead, matching the
- * convention used by this author's other WordPress plugins.
+ * Keep the category's existing registry identifier independently of the ability
+ * namespace. Its human-readable label already identifies the plugin.
  *
  * @return void
  */
@@ -245,7 +243,20 @@ function mswpa_register_categories() {
 // -------------------------------------------------------------------------
 add_action( 'wp_abilities_api_init', 'mswpa_register_abilities' );
 /**
- * Register all custom abilities in the "miriamschwab" category.
+ * Register canonical names and compatibility aliases with identical callbacks.
+ *
+ * @param string $name Canonical ability name.
+ * @param array  $args Registration arguments.
+ * @return void
+ */
+function mswpa_register_ability( string $name, array $args ): void {
+	foreach ( mswpa_ability_registrations( $name, $args ) as $registered_name => $registered_args ) {
+		wp_register_ability( $registered_name, $registered_args );
+	}
+}
+
+/**
+ * Register all custom abilities in the existing "miriamschwab" category.
  *
  * @return void
  */
@@ -255,8 +266,8 @@ function mswpa_register_abilities() {
 	// POSTS
 	// =========================================================================
 
-	wp_register_ability(
-		'miriamschwab/get-posts',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-posts',
 		array(
 			'label'               => __( 'Get Posts', 'ms-wp-abilities' ),
 			'description'         => __( 'Retrieve posts with optional filtering by status, post type, category, tag, and search term.', 'ms-wp-abilities' ),
@@ -360,8 +371,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/get-pages',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-pages',
 		array(
 			'label'               => __( 'Get Pages', 'ms-wp-abilities' ),
 			'description'         => __( 'Retrieve pages with optional filtering by status and search term. Returns parent/child hierarchy and menu order.', 'ms-wp-abilities' ),
@@ -441,8 +452,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/create-post',
+	mswpa_register_ability(
+		'ms-wp-abilities/create-post',
 		array(
 			'label'               => __( 'Create Post', 'ms-wp-abilities' ),
 			'description'         => __( 'Create a new WordPress post. Defaults to draft status. Pass markdown to auto-convert to Gutenberg blocks. Supports meta for Yoast SEO fields and any other post meta. Pass author to credit someone other than the connected user.', 'ms-wp-abilities' ),
@@ -575,8 +586,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/patch-post-content',
+	mswpa_register_ability(
+		'ms-wp-abilities/patch-post-content',
 		array(
 			'label'               => __( 'Patch Post Content', 'ms-wp-abilities' ),
 			'description'         => __( 'Surgical find-and-replace within post content. No preview/apply required. Use for targeted changes: fixing a typo, adding a link, updating a URL, inserting a sentence. Errors if find string not found. Returns replacement count.', 'ms-wp-abilities' ),
@@ -657,8 +668,8 @@ function mswpa_register_abilities() {
 	);
 
 	// preview-post-update — extended to support `meta` field (key-value pairs).
-	wp_register_ability(
-		'miriamschwab/preview-post-update',
+	mswpa_register_ability(
+		'ms-wp-abilities/preview-post-update',
 		array(
 			'label'               => __( 'Preview Post Update', 'ms-wp-abilities' ),
 			'description'         => __( 'Stage a proposed post update server-side and return before/after diff. No changes are made. CORRECT USAGE: (1) Present proposed changes to the user as plain text and ask "Here\'s what I propose... should I go ahead?" (2) Wait for explicit user confirmation. (3) Only then call preview-post-update. (4) Immediately call apply-post-update.', 'ms-wp-abilities' ),
@@ -778,15 +789,15 @@ function mswpa_register_abilities() {
 					'changes'      => $changes,
 					'before'       => $before,
 					'proposed'     => $proposed,
-					'instructions' => 'Show the user this before/after comparison. Only call miriamschwab/apply-post-update (with this post_id) after they confirm.',
+					'instructions' => 'Show the user this before/after comparison. Only call ms-wp-abilities/apply-post-update (with this post_id) after they confirm.',
 				);
 			},
 			'meta'                => array( 'mcp' => array( 'public' => true ) ),
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/apply-post-update',
+	mswpa_register_ability(
+		'ms-wp-abilities/apply-post-update',
 		array(
 			'label'               => __( 'Apply Post Update', 'ms-wp-abilities' ),
 			'description'         => __( 'Apply a pending post update staged by preview-post-update. Call immediately after the user confirms the proposed change. Takes post_id; multiple staged updates can be applied independently.', 'ms-wp-abilities' ),
@@ -903,8 +914,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/trash-post',
+	mswpa_register_ability(
+		'ms-wp-abilities/trash-post',
 		array(
 			'label'               => __( 'Trash Post', 'ms-wp-abilities' ),
 			'description'         => __( 'Move a post or page to the trash. Reversible from wp-admin.', 'ms-wp-abilities' ),
@@ -939,8 +950,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/get-post-meta',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-post-meta',
 		array(
 			'label'               => __( 'Get Post Meta', 'ms-wp-abilities' ),
 			'description'         => __( 'Read post meta for a given post. Returns all meta by default, or specific keys if provided.', 'ms-wp-abilities' ),
@@ -985,8 +996,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/get-post-types',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-post-types',
 		array(
 			'label'               => __( 'Get Post Types', 'ms-wp-abilities' ),
 			'description'         => __( 'List all registered public post types.', 'ms-wp-abilities' ),
@@ -1022,8 +1033,8 @@ function mswpa_register_abilities() {
 	// TAXONOMY
 	// =========================================================================
 
-	wp_register_ability(
-		'miriamschwab/get-categories',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-categories',
 		array(
 			'label'               => __( 'Get Categories', 'ms-wp-abilities' ),
 			'description'         => __( 'Retrieve all categories with slugs, post counts, and parent relationships.', 'ms-wp-abilities' ),
@@ -1067,8 +1078,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/get-tags',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-tags',
 		array(
 			'label'               => __( 'Get Tags', 'ms-wp-abilities' ),
 			'description'         => __( 'Retrieve all post tags with slugs and post counts.', 'ms-wp-abilities' ),
@@ -1111,8 +1122,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/create-term',
+	mswpa_register_ability(
+		'ms-wp-abilities/create-term',
 		array(
 			'label'               => __( 'Create Term', 'ms-wp-abilities' ),
 			'description'         => __( 'Create a new category or tag.', 'ms-wp-abilities' ),
@@ -1171,8 +1182,8 @@ function mswpa_register_abilities() {
 	// MEDIA
 	// =========================================================================
 
-	wp_register_ability(
-		'miriamschwab/get-media',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-media',
 		array(
 			'label'               => __( 'Get Media', 'ms-wp-abilities' ),
 			'description'         => __( 'List media library items with optional filtering by mime type and search.', 'ms-wp-abilities' ),
@@ -1248,8 +1259,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/update-media-meta',
+	mswpa_register_ability(
+		'ms-wp-abilities/update-media-meta',
 		array(
 			'label'               => __( 'Update Media Meta', 'ms-wp-abilities' ),
 			'description'         => __( 'Update alt text, title, caption, or description for a media item. Direct update — no preview step needed for metadata changes.', 'ms-wp-abilities' ),
@@ -1310,8 +1321,8 @@ function mswpa_register_abilities() {
 	// USERS
 	// =========================================================================
 
-	wp_register_ability(
-		'miriamschwab/get-users',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-users',
 		array(
 			'label'               => __( 'Get Users', 'ms-wp-abilities' ),
 			'description'         => __( 'List users with optional role filtering.', 'ms-wp-abilities' ),
@@ -1367,8 +1378,8 @@ function mswpa_register_abilities() {
 	// SITE
 	// =========================================================================
 
-	wp_register_ability(
-		'miriamschwab/get-site-settings',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-site-settings',
 		array(
 			'label'               => __( 'Get Site Settings', 'ms-wp-abilities' ),
 			'description'         => __( 'Read key WordPress site settings: name, description, URL, timezone, date format, posts per page, language, active theme.', 'ms-wp-abilities' ),
@@ -1402,8 +1413,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/get-menus',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-menus',
 		array(
 			'label'               => __( 'Get Menus', 'ms-wp-abilities' ),
 			'description'         => __( 'List all navigation menus with their items. Pass include_items: false to skip item details.', 'ms-wp-abilities' ),
@@ -1462,8 +1473,8 @@ function mswpa_register_abilities() {
 	// PLUGINS
 	// =========================================================================
 
-	wp_register_ability(
-		'miriamschwab/get-plugins',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-plugins',
 		array(
 			'label'               => __( 'Get Plugins', 'ms-wp-abilities' ),
 			'description'         => __( 'List all installed plugins with name, version, active status, and whether an update is available.', 'ms-wp-abilities' ),
@@ -1521,8 +1532,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/install-plugin',
+	mswpa_register_ability(
+		'ms-wp-abilities/install-plugin',
 		array(
 			'label'               => __( 'Install Plugin', 'ms-wp-abilities' ),
 			'description'         => __( 'Install a plugin from the WordPress.org plugin directory by its slug. Does not activate after install unless activate: true is passed.', 'ms-wp-abilities' ),
@@ -1604,8 +1615,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/activate-plugin',
+	mswpa_register_ability(
+		'ms-wp-abilities/activate-plugin',
 		array(
 			'label'               => __( 'Activate Plugin', 'ms-wp-abilities' ),
 			'description'         => __( 'Activate an installed plugin by its plugin file path (e.g. woocommerce/woocommerce.php). Get plugin file paths from get-plugins.', 'ms-wp-abilities' ),
@@ -1644,8 +1655,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/update-plugin',
+	mswpa_register_ability(
+		'ms-wp-abilities/update-plugin',
 		array(
 			'label'               => __( 'Update Plugin', 'ms-wp-abilities' ),
 			'description'         => __( 'Update a plugin to its latest version. Use get-available-updates to find plugins with updates, then get-plugins for the plugin_file path.', 'ms-wp-abilities' ),
@@ -1698,8 +1709,8 @@ function mswpa_register_abilities() {
 	// THEMES
 	// =========================================================================
 
-	wp_register_ability(
-		'miriamschwab/get-themes',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-themes',
 		array(
 			'label'               => __( 'Get Themes', 'ms-wp-abilities' ),
 			'description'         => __( 'List all installed themes with version, author, active status, and whether an update is available.', 'ms-wp-abilities' ),
@@ -1737,8 +1748,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/update-theme',
+	mswpa_register_ability(
+		'ms-wp-abilities/update-theme',
 		array(
 			'label'               => __( 'Update Theme', 'ms-wp-abilities' ),
 			'description'         => __( 'Update a theme to its latest version. Use get-available-updates to find themes with updates, then get-themes for the slug.', 'ms-wp-abilities' ),
@@ -1790,8 +1801,8 @@ function mswpa_register_abilities() {
 	// UPDATES
 	// =========================================================================
 
-	wp_register_ability(
-		'miriamschwab/get-available-updates',
+	mswpa_register_ability(
+		'ms-wp-abilities/get-available-updates',
 		array(
 			'label'               => __( 'Get Available Updates', 'ms-wp-abilities' ),
 			'description'         => __( 'Check what plugin, theme, and WordPress core updates are available. Uses cached update data.', 'ms-wp-abilities' ),
@@ -1870,8 +1881,8 @@ function mswpa_register_abilities() {
 	// hard-blocked here for a short list of especially destructive routes
 	// regardless of what was agreed in conversation.
 
-	wp_register_ability(
-		'miriamschwab/rest-get',
+	mswpa_register_ability(
+		'ms-wp-abilities/rest-get',
 		array(
 			'label'               => __( 'REST Get', 'ms-wp-abilities' ),
 			'description'         => __( 'Call any registered WordPress REST API route with GET only — core or a third-party plugin\'s namespace (e.g. comments, WooCommerce, Gravity Forms). Use this before concluding that a feature or piece of data isn\'t available, or asking the user to clarify — most plugins register their own REST namespace matching their slug (e.g. angie/angie.php → /angie/v1, wordpress-seo/wp-seo.php → /yoast/v1). Query that namespace root directly (e.g. /angie/v1) rather than the global index (/) — the full site index can be hundreds of KB and exceed output limits; only fall back to / and filter its routes by keyword if the namespace can\'t be guessed. This ability cannot issue any write method.', 'ms-wp-abilities' ),
@@ -1919,8 +1930,8 @@ function mswpa_register_abilities() {
 		)
 	);
 
-	wp_register_ability(
-		'miriamschwab/rest-write',
+	mswpa_register_ability(
+		'ms-wp-abilities/rest-write',
 		array(
 			'label'               => __( 'REST Write', 'ms-wp-abilities' ),
 			'description'         => __( 'Call any registered WordPress REST API route with a write method (POST, PUT, PATCH, DELETE) — core or a third-party plugin\'s namespace. Use this before concluding that a write action isn\'t possible — most plugins register their own REST namespace matching their slug (e.g. angie/angie.php → /angie/v1); check that namespace\'s routes with rest-get rather than assuming no endpoint exists. CORRECT USAGE: state the exact route, method, and payload to the user in plain language ("Here\'s what I propose... should I go ahead?") and wait for explicit confirmation before calling. Hard-blocked regardless of confirmation: any write to /wp/v2/users, DELETE on /wp/v2/plugins, any write to /wp/v2/settings, and any force=true (permanent delete bypassing trash).', 'ms-wp-abilities' ),
@@ -2265,7 +2276,7 @@ function mswpa_plugin_action_links( $links ) {
 /**
  * Get the namespace portion of an ability name (the part before the slash).
  *
- * @param string $name Full ability name, e.g. "miriamschwab/get-posts".
+ * @param string $name Full ability name, e.g. "ms-wp-abilities/get-posts".
  * @return string Namespace, e.g. "miriamschwab".
  */
 function mswpa_ability_namespace( string $name ): string {

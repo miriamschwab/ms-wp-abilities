@@ -144,7 +144,7 @@ class AbilityAuditLogTest extends TestCase {
 	 */
 	public function testEntryShape(): void {
 		$entry = mswpa_audit_entry(
-			'miriamschwab/rest-write',
+			'ms-wp-abilities/rest-write',
 			array(
 				'route'  => '/wp/v2/settings',
 				'method' => 'POST',
@@ -154,7 +154,7 @@ class AbilityAuditLogTest extends TestCase {
 			1700000000
 		);
 
-		$this->assertSame( 'miriamschwab/rest-write', $entry['ability'] );
+		$this->assertSame( 'ms-wp-abilities/rest-write', $entry['ability'] );
 		$this->assertSame( 7, $entry['user'] );
 		$this->assertSame( 1700000000, $entry['time'] );
 		$this->assertSame( array( 'route', 'method', 'body' ), $entry['keys'] );
@@ -228,7 +228,7 @@ class AbilityAuditLogTest extends TestCase {
 		$loggable = mswpa_audit_loggable_keys();
 
 		foreach ( mswpa_test_parse_registrations() as $name => $info ) {
-			if ( ! mswpa_is_write_ability( $name ) || 'miriamschwab/create-post' === $name ) {
+			if ( ! mswpa_is_write_ability( $name ) || 'ms-wp-abilities/create-post' === $name ) {
 				continue;
 			}
 			$this->assertNotEmpty(

@@ -167,6 +167,20 @@ function mswpa_catalog_line( string $name, string $detail ): string {
  * @return string The catalog block, or '' when it cannot fit the budget.
  */
 function mswpa_build_ability_catalog( array $rows ): string {
+	$names = array();
+	foreach ( $rows as $row ) {
+		if ( is_array( $row ) && isset( $row['name'] ) && is_string( $row['name'] ) ) {
+			$names[ $row['name'] ] = true;
+		}
+	}
+	// Recommend canonical names once while keeping aliases callable through MCP.
+	$rows = array_filter( $rows, static function ( $row ) use ( $names ): bool {
+		if ( ! is_array( $row ) || ! isset( $row['name'] ) || ! is_string( $row['name'] ) ) {
+			return true;
+		}
+		$canonical = mswpa_canonical_ability_name( $row['name'] );
+		return $canonical === $row['name'] || ! isset( $names[ $canonical ] );
+	} );
 	if ( empty( $rows ) ) {
 		return '';
 	}

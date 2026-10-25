@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added: canonical `ms-wp-abilities/` ability names with callable `miriamschwab/` compatibility aliases. Preserve schemas, callbacks, permission checks, write restrictions, and audit logging; recommend canonical names in the generated catalog. Add namespace migration regression coverage.
+
 ## 1.13.0 — 2026-10-18
 
 - Added: `create-post` takes an optional `author`, a user ID or username, so a post can be credited to the right person when it is created. Until now every post went to the account the MCP client connects as, and correcting it afterwards meant an update that also changed each post's modified date. Leave it out and nothing changes. Naming someone else follows the same rule as the WordPress REST API, permission to edit others' posts of that type, and the named user must be able to write that type, so a post cannot be credited to a subscriber. An unknown user is an error, never a silent fallback to the connected account. The audit trail records which author was requested.
