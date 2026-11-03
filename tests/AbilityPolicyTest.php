@@ -122,17 +122,17 @@ class AbilityPolicyTest extends TestCase {
 	 */
 	public function testKnownWriteAbilitiesAreFlagged(): void {
 		$writes = array(
-			'miriamschwab/create-post',
-			'miriamschwab/patch-post-content',
-			'miriamschwab/apply-post-update',
-			'miriamschwab/trash-post',
-			'miriamschwab/create-term',
-			'miriamschwab/update-media-meta',
-			'miriamschwab/install-plugin',
-			'miriamschwab/activate-plugin',
-			'miriamschwab/update-plugin',
-			'miriamschwab/update-theme',
-			'miriamschwab/rest-write',
+			'ms-wp-abilities/create-post',
+			'ms-wp-abilities/patch-post-content',
+			'ms-wp-abilities/apply-post-update',
+			'ms-wp-abilities/trash-post',
+			'ms-wp-abilities/create-term',
+			'ms-wp-abilities/update-media-meta',
+			'ms-wp-abilities/install-plugin',
+			'ms-wp-abilities/activate-plugin',
+			'ms-wp-abilities/update-plugin',
+			'ms-wp-abilities/update-theme',
+			'ms-wp-abilities/rest-write',
 		);
 		foreach ( $writes as $name ) {
 			$this->assertTrue( mswpa_is_write_ability( $name ), sprintf( '%s should be a write.', $name ) );
@@ -149,12 +149,12 @@ class AbilityPolicyTest extends TestCase {
 	 */
 	public function testReadAbilitiesAreNotFlaggedAsWrites(): void {
 		$reads = array(
-			'miriamschwab/get-posts',
-			'miriamschwab/get-pages',
-			'miriamschwab/preview-post-update',
-			'miriamschwab/get-media',
-			'miriamschwab/get-users',
-			'miriamschwab/rest-get',
+			'ms-wp-abilities/get-posts',
+			'ms-wp-abilities/get-pages',
+			'ms-wp-abilities/preview-post-update',
+			'ms-wp-abilities/get-media',
+			'ms-wp-abilities/get-users',
+			'ms-wp-abilities/rest-get',
 		);
 		foreach ( $reads as $name ) {
 			$this->assertFalse( mswpa_is_write_ability( $name ), sprintf( '%s should not be a write.', $name ) );
@@ -167,8 +167,8 @@ class AbilityPolicyTest extends TestCase {
 	 * @return void
 	 */
 	public function testUnknownAbilityIsNotAWriteAndHasNoCapability(): void {
-		$this->assertFalse( mswpa_is_write_ability( 'miriamschwab/not-a-real-ability' ) );
-		$this->assertNull( mswpa_required_capability_for( 'miriamschwab/not-a-real-ability' ) );
+		$this->assertFalse( mswpa_is_write_ability( 'ms-wp-abilities/not-a-real-ability' ) );
+		$this->assertNull( mswpa_required_capability_for( 'ms-wp-abilities/not-a-real-ability' ) );
 	}
 
 	/**
@@ -234,7 +234,7 @@ class AbilityPolicyTest extends TestCase {
 	public function testPublicMetaDoesNotOpenRestExposure(): void {
 		$args = mswpa_force_no_rest_exposure(
 			array( 'meta' => array( 'public' => true ) ),
-			'miriamschwab/rest-write'
+			'ms-wp-abilities/rest-write'
 		);
 		$this->assertFalse( $args['meta']['show_in_rest'] );
 		$this->assertTrue( $args['meta']['public'], 'The public flag itself must be left alone for MCP.' );
@@ -248,7 +248,7 @@ class AbilityPolicyTest extends TestCase {
 	public function testExplicitShowInRestIsOverridden(): void {
 		$args = mswpa_force_no_rest_exposure(
 			array( 'meta' => array( 'show_in_rest' => true ) ),
-			'miriamschwab/get-posts'
+			'ms-wp-abilities/get-posts'
 		);
 		$this->assertFalse( $args['meta']['show_in_rest'] );
 	}
@@ -259,7 +259,7 @@ class AbilityPolicyTest extends TestCase {
 	 * @return void
 	 */
 	public function testMissingMetaIsCreated(): void {
-		$args = mswpa_force_no_rest_exposure( array( 'label' => 'X' ), 'miriamschwab/get-posts' );
+		$args = mswpa_force_no_rest_exposure( array( 'label' => 'X' ), 'ms-wp-abilities/get-posts' );
 		$this->assertFalse( $args['meta']['show_in_rest'] );
 		$this->assertSame( 'X', $args['label'], 'Other args must be preserved.' );
 	}
@@ -299,8 +299,8 @@ class AbilityPolicyTest extends TestCase {
 	 * @return void
 	 */
 	public function testOwnAbilityDetection(): void {
-		$this->assertTrue( mswpa_is_own_ability( 'miriamschwab/get-posts' ) );
-		$this->assertFalse( mswpa_is_own_ability( 'other/miriamschwab/get-posts' ) );
+		$this->assertTrue( mswpa_is_own_ability( 'ms-wp-abilities/get-posts' ) );
+		$this->assertFalse( mswpa_is_own_ability( 'other/ms-wp-abilities/get-posts' ) );
 		$this->assertFalse( mswpa_is_own_ability( 'miriamschwab-other/get-posts' ) );
 	}
 }

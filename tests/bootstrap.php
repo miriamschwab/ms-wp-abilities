@@ -60,6 +60,7 @@ if ( ! function_exists( '__' ) ) {
 
 require_once __DIR__ . '/../ms-wp-abilities/includes/rest-write-guard.php';
 require_once __DIR__ . '/../ms-wp-abilities/includes/ability-policy.php';
+require_once __DIR__ . '/../ms-wp-abilities/includes/ability-namespace.php';
 require_once __DIR__ . '/../ms-wp-abilities/includes/ability-fields.php';
 require_once __DIR__ . '/../ms-wp-abilities/includes/ability-audit-log.php';
 require_once __DIR__ . '/../ms-wp-abilities/includes/ability-catalog.php';
@@ -107,12 +108,12 @@ function wp_json_encode_fallback( $value ) {
  */
 function mswpa_test_parse_registrations(): array {
 	$source = (string) file_get_contents( __DIR__ . '/../ms-wp-abilities/ms-wp-abilities.php' );
-	$chunks = explode( 'wp_register_ability(', $source );
+	$chunks = explode( 'mswpa_register_ability(', $source );
 	array_shift( $chunks );
 
 	$found = array();
 	foreach ( $chunks as $chunk ) {
-		if ( ! preg_match( "/^\s*'(miriamschwab\/[a-z0-9-]+)'/", $chunk, $name_match ) ) {
+		if ( ! preg_match( "/^\s*'(ms-wp-abilities\/[a-z0-9-]+)'/", $chunk, $name_match ) ) {
 			continue;
 		}
 

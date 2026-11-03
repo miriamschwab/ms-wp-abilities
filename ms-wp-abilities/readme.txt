@@ -100,9 +100,9 @@ Each ability checks the appropriate WordPress capability: `edit_posts` for post 
 
 Yes, three things. When a post update is staged via preview-post-update, the pending update is stored temporarily in user meta under `_mswpa_pending_update_{post_id}`; it expires after 10 minutes and is consumed on apply. The WP Abilities admin page (Tools > WP Abilities) also stores a snapshot of the currently-registered ability list in a site option, `mswpa_abilities_snapshot`, so it can flag what's new or no longer registered since your last visit to that page. On WordPress 7.1 and later, that page also keeps an audit trail of the last 100 invocations of an ability that changes content or configuration, in a site option, `mswpa_write_log`. The trail records the ability name, the user, the time, and the input field names; values are recorded only for identifying fields such as a post ID or a REST route, so post content, REST bodies and meta values are never stored. All three are removed on uninstall.
 
-= Why are the abilities named `miriamschwab/...`? =
+= Which ability namespace should clients use? =
 
-That is the plugin's ability namespace and category ID, kept from its first version so existing setups keep working. It does not tie the plugin to any one site: the abilities work on any WordPress site, with any post type it registers.
+Use `ms-wp-abilities/...`, for example `ms-wp-abilities/create-post`. Existing `miriamschwab/...` names remain callable compatibility aliases with the same schemas, callbacks, permission checks, write restrictions, and audit logging. Alias descriptions point to the canonical names, which the generated MCP catalog lists once. Existing clients keep working; new client approval rules should match `ms-wp-abilities/`. The namespace identifies the plugin, not the user performing the operation. The existing category ID is unchanged.
 
 == Changelog ==
 

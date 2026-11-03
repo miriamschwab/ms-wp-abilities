@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for the miriamschwab/rest-write hard-block guard.
+ * Tests for the ms-wp-abilities/rest-write hard-block guard.
  *
  * The guard is the plugin's one non-negotiable boundary: a short list of
  * destructive REST writes that are refused in code regardless of what the agent
