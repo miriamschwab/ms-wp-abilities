@@ -303,4 +303,84 @@ class AbilityPolicyTest extends TestCase {
 		$this->assertFalse( mswpa_is_own_ability( 'other/miriamschwab/get-posts' ) );
 		$this->assertFalse( mswpa_is_own_ability( 'miriamschwab-other/get-posts' ) );
 	}
+
+	// ---------------------------------------------------------------------
+	// required_capabilities (WordPress 7.2+).
+	// ---------------------------------------------------------------------
+
+	/**
+	 * On 7.2+, every ability declares exactly the capability its callback checks.
+	 *
+	 * Compared against the parsed registrations, not just the table, so a drift
+	 * between the two shows up here as well as in the policy tests above.
+	 *
+	 * @return void
+	 */
+	public function testEveryAbilityDeclaresItsCapabilityWhenSupported(): void {
+		foreach ( $this->registeredAbilities() as $name => $cap ) {
+			$args = mswpa_add_required_capabilities( array( 'label' => 'X' ), $name, true );
+			$this->assertSame( array( $cap ), $args['required_capabilities'] ?? null, sprintf( '%s should declare only "%s".', $name, $cap ) );
+			$this->assertSame( 'X', $args['label'], 'Other args must be preserved.' );
+		}
+	}
+
+	/**
+	 * Before 7.2 the args pass through untouched.
+	 *
+	 * This is the guard that matters most: on 6.9-7.1 an unknown registration key
+	 * raises _doing_it_wrong() for every ability on every request.
+	 *
+	 * @return void
+	 */
+	public function testNothingIsAddedWhenUnsupported(): void {
+		foreach ( array_keys( mswpa_ability_policy() ) as $name ) {
+			$args = array( 'meta' => array( 'mcp' => array( 'public' => true ) ) );
+			$this->assertSame( $args, mswpa_add_required_capabilities( $args, $name, false ), sprintf( '%s must be untouched before 7.2.', $name ) );
+		}
+	}
+
+	/**
+	 * Abilities outside this plugin's namespace are never given capabilities.
+	 *
+	 * @param string $name Ability name outside this plugin's namespace.
+	 * @return void
+	 */
+	#[DataProvider( 'foreignAbilityNames' )]
+	public function testForeignAbilitiesGetNoRequiredCapabilities( string $name ): void {
+		$args = array( 'meta' => array( 'public' => true ) );
+		$this->assertSame( $args, mswpa_add_required_capabilities( $args, $name, true ) );
+	}
+
+	/**
+	 * An own-namespace ability missing from the table is left alone.
+	 *
+	 * There is no reviewed capability to declare, and the floor denies it anyway.
+	 *
+	 * @return void
+	 */
+	public function testUnclassifiedAbilityIsLeftAlone(): void {
+		$args = array( 'label' => 'X' );
+		$this->assertSame( $args, mswpa_add_required_capabilities( $args, 'miriamschwab/not-a-real-ability', true ) );
+	}
+
+	/**
+	 * Capabilities a registration already declares are kept, without duplicates.
+	 *
+	 * @return void
+	 */
+	public function testExistingRequiredCapabilitiesAreKept(): void {
+		$args = mswpa_add_required_capabilities(
+			array( 'required_capabilities' => array( 'upload_files' ) ),
+			'miriamschwab/get-posts',
+			true
+		);
+		$this->assertSame( array( 'upload_files', 'edit_posts' ), $args['required_capabilities'] );
+
+		$args = mswpa_add_required_capabilities(
+			array( 'required_capabilities' => array( 'edit_posts' ) ),
+			'miriamschwab/get-posts',
+			true
+		);
+		$this->assertSame( array( 'edit_posts' ), $args['required_capabilities'], 'The policy capability must not be listed twice.' );
+	}
 }

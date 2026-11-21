@@ -58,6 +58,7 @@ This plugin grants real, broad control over the WordPress site to whatever MCP c
 
 - **Only connect a trusted MCP client.** Whatever has access to the abilities this plugin registers can act on the site as the authenticated user.
 - **Use an application password scoped to a real Administrator account**, not a shared or over-privileged one, and treat it like any other credential.
+- **Every ability checks one WordPress capability**, and a second check re-applies it from a central table, so an ability whose own check is wrong still can't run. On WordPress 7.2+ that capability is also declared to WordPress as `required_capabilities`. Per-item checks, such as permission to edit a specific post, run inside each ability.
 - **Review the `rest-write` hard-block list** in the source (`mswpa_rest_write_blocked_reason()`) before relying on it as a safety net — it blocks a short list of especially destructive routes (user writes, force-deleting plugins, site settings writes, permanent deletes), not everything that could go wrong.
 - Post content updates use a two-step preview/confirm model (`preview-post-update` → `apply-post-update`); the REST bridge follows the same pattern for writes. Both rely on the calling agent stating the proposed change and waiting for the human's explicit approval — this is a conversational policy the agent is instructed to follow, not a mechanism enforced by the code itself.
 

@@ -3,7 +3,7 @@
  * Plugin Name:       MS WordPress Abilities
  * Plugin URI:        https://miriamschwab.me/plugins/ms-wp-abilities
  * Description:       Registers WordPress core and custom abilities for MCP Adapter access, enabling AI agents to interact with this WordPress site.
- * Version:           1.13.0
+ * Version:           1.14.0
  * Author:            Miriam Schwab
  * Author URI:        https://miriamschwab.me
  * License:           GPL-2.0-or-later
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'MSWPA_VERSION', '1.13.0' );
+define( 'MSWPA_VERSION', '1.14.0' );
 define( 'MSWPA_PREVIEW_EXPIRY_SECS', 600 );
 define( 'MSWPA_ABILITIES_SNAPSHOT_OPTION', 'mswpa_abilities_snapshot' );
 define( 'MSWPA_AUDIT_LOG_OPTION', 'mswpa_write_log' );
@@ -100,6 +100,26 @@ function mswpa_enable_core_abilities_mcp_access( array $args, string $ability_na
 // where one of those is wrong, not the case where it is absent.
 
 add_filter( 'wp_register_ability_args', 'mswpa_force_no_rest_exposure', 10, 2 );
+
+add_filter( 'wp_register_ability_args', 'mswpa_declare_required_capabilities', 10, 2 );
+/**
+ * Declare each ability's policy capability to core as `required_capabilities`.
+ *
+ * Only on WordPress 7.2+, detected by the getter that release added. Earlier
+ * versions raise _doing_it_wrong() for the unknown key, so there the args pass
+ * through untouched. See mswpa_add_required_capabilities().
+ *
+ * @param array  $args         Ability registration args.
+ * @param string $ability_name Ability being registered.
+ * @return array Filtered registration args.
+ */
+function mswpa_declare_required_capabilities( array $args, string $ability_name ): array {
+	return mswpa_add_required_capabilities(
+		$args,
+		$ability_name,
+		method_exists( 'WP_Ability', 'get_required_capabilities' )
+	);
+}
 
 add_filter( 'wp_ability_validate_input', 'mswpa_validate_ability_input', 10, 3 );
 /**

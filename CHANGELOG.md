@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.0 — 2026-11-21
+
+- Added: on WordPress 7.2+, every ability declares its policy-table capability as `required_capabilities`, through a `wp_register_ability_args` filter, so new abilities get it automatically. Core checks it before the `permission_callback`, returns it from `WP_Ability::get_required_capabilities()`, and honours it in `has_required_capabilities` discovery. It is the same capability the capability floor already requires on every call, so no ability is hidden from a user who could run it. Detected with `method_exists( 'WP_Ability', 'get_required_capabilities' )`; before 7.2 the key is not added, because WordPress raises `_doing_it_wrong()` for unknown registration keys. Every `permission_callback` and the floor stay, since they are the only checks before 7.2.
+
 ## 1.13.0 — 2026-10-18
 
 - Added: `create-post` takes an optional `author`, a user ID or username, so a post can be credited to the right person when it is created. Until now every post went to the account the MCP client connects as, and correcting it afterwards meant an update that also changed each post's modified date. Leave it out and nothing changes. Naming someone else follows the same rule as the WordPress REST API, permission to edit others' posts of that type, and the named user must be able to write that type, so a post cannot be credited to a subscriber. An unknown user is an error, never a silent fallback to the connected account. The audit trail records which author was requested.

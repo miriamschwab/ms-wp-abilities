@@ -2,17 +2,19 @@
 /**
  * Central policy table for this plugin's abilities.
  *
- * One table, three consumers:
+ * One table, four consumers:
  *
  *   1. mswpa_force_no_rest_exposure()   — keeps every ability out of the core
  *                                         abilities REST API.
  *   2. mswpa_enforce_capability_floor() — re-checks the declared capability after
  *                                         the ability's own permission_callback ran.
  *   3. the wp_ability_invoked audit log — decides which invocations are recorded.
+ *   4. mswpa_add_required_capabilities() — declares the capability to core as
+ *                                         `required_capabilities` (WordPress 7.2+).
  *
  * Keeping the classification in one place is the point: an ability added to
  * ms-wp-abilities.php without a matching entry here fails AbilityPolicyTest, so
- * the three behaviors above can never silently miss a new ability.
+ * the behaviors above can never silently miss a new ability.
  *
  * This file has no WordPress dependencies, so it can be unit-tested without
  * loading the plugin's hook registrations. See tests/AbilityPolicyTest.php.
@@ -245,5 +247,52 @@ function mswpa_force_no_rest_exposure( array $args, string $ability_name ): arra
 		$args['meta'] = array();
 	}
 	$args['meta']['show_in_rest'] = false;
+	return $args;
+}
+
+/**
+ * Declare each ability's policy capability as `required_capabilities`.
+ *
+ * WordPress 7.2 lets an ability list the capabilities every call needs. Core then
+ * checks them before the permission_callback runs, returns them from
+ * WP_Ability::get_required_capabilities(), and lets discovery leave out abilities
+ * the current user cannot run (`has_required_capabilities`). The policy table's
+ * `cap` is exactly that: the floor in mswpa_enforce_capability_floor() demands it
+ * on every invocation, whatever the input, so declaring it hides nothing from a
+ * user who could have run the ability. Per-item checks (edit_post on a given ID)
+ * stay in the execute callbacks, where they belong.
+ *
+ * `$supported` must be false on WordPress before 7.2. There the key is unknown,
+ * and WP_Ability's constructor raises _doing_it_wrong() for every unknown key,
+ * once per ability per request. The caller passes the answer in, so this stays
+ * free of WordPress and testable.
+ *
+ * Nothing else changes: every permission_callback and the capability floor stay
+ * in place, since they are the only checks on 6.9-7.1.
+ *
+ * @param array  $args         Ability registration args.
+ * @param string $ability_name Ability being registered.
+ * @param bool   $supported    Whether this WordPress knows `required_capabilities`.
+ * @return array Filtered registration args.
+ */
+function mswpa_add_required_capabilities( array $args, string $ability_name, bool $supported ): array {
+	if ( ! $supported || ! mswpa_is_own_ability( $ability_name ) ) {
+		return $args;
+	}
+	$cap = mswpa_required_capability_for( $ability_name );
+	if ( null === $cap ) {
+		// Not in the table: the floor already denies it, and there is no
+		// reviewed capability to declare.
+		return $args;
+	}
+
+	$declared = array();
+	if ( isset( $args['required_capabilities'] ) && is_array( $args['required_capabilities'] ) ) {
+		$declared = $args['required_capabilities'];
+	}
+	if ( ! in_array( $cap, $declared, true ) ) {
+		$declared[] = $cap;
+	}
+	$args['required_capabilities'] = array_values( $declared );
 	return $args;
 }

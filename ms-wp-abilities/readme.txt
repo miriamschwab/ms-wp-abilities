@@ -4,7 +4,7 @@ Tags: ai, mcp, abilities, rest-api, agents
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.13.0
+Stable tag: 1.14.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,7 +94,7 @@ WordPress 6.9 or higher. This plugin uses the `wp_register_ability()` API introd
 
 = What capabilities do the abilities require? =
 
-Each ability checks the appropriate WordPress capability: `edit_posts` for post reads and writes (plus the post type's `edit_others_posts` when create-post credits someone else), `delete_posts` for trashing, `upload_files` for media, `manage_categories` for taxonomy, `list_users` for user listing, `manage_options` for site settings, `activate_plugins` / `install_plugins` / `update_plugins` for plugin management, and `switch_themes` / `update_themes` for theme management.
+Each ability checks the appropriate WordPress capability: `edit_posts` for post reads and writes (plus the post type's `edit_others_posts` when create-post credits someone else), `delete_posts` for trashing, `upload_files` for media, `manage_categories` for taxonomy, `list_users` for user listing, `manage_options` for site settings, `activate_plugins` / `install_plugins` / `update_plugins` for plugin management, and `switch_themes` / `update_themes` for theme management. On WordPress 7.2 and later, each ability also declares that capability to WordPress, so WordPress checks it first and can list only the abilities the connected user is allowed to use.
 
 = Does the plugin store any data? =
 
@@ -105,6 +105,9 @@ Yes, three things. When a post update is staged via preview-post-update, the pen
 That is the plugin's ability namespace and category ID, kept from its first version so existing setups keep working. It does not tie the plugin to any one site: the abilities work on any WordPress site, with any post type it registers.
 
 == Changelog ==
+
+= 1.14.0 - 2026-11-21 =
+* Added: on WordPress 7.2 and later, every ability tells WordPress which capability it needs, so WordPress checks it before running the ability and agents can be shown only the abilities the connected user is allowed to use. Each ability's own permission check stays in place, so nothing changes on earlier versions.
 
 = 1.13.0 - 2026-10-18 =
 * Added: create-post takes an optional `author`, a user ID or username, so a post can be credited to the right person when it is created. Until now every post went to the account the MCP client connects as, and correcting it afterwards meant an update that also changed each post's modified date. Leave it out and nothing changes. Naming someone else follows the same rule as the WordPress REST API, permission to edit others' posts of that type, and the named user must be able to write that type, so a post cannot be credited to a subscriber. An unknown user is an error, never a silent fallback to the connected account. The audit trail records which author was requested.
@@ -192,6 +195,9 @@ That is the plugin's ability namespace and category ID, kept from its first vers
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.14.0 =
+Prepares for WordPress 7.2: each ability declares the capability it needs, so WordPress can check it and show agents only what the connected user can run. No change on earlier versions.
 
 = 1.11.1 =
 Fixes the write audit trail so it records which plugin or media item a write acted on. Recommended for anyone relying on that trail. No other behavior change.
